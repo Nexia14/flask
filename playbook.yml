@@ -1,0 +1,37 @@
+---
+- name: Upload my Home Page
+  hosts: staging_servers
+  become: yes
+
+  tasks:
+  - name: "create-remote-dirs"
+    file:
+      path: /home/slave27/Загрузки/{{ item.path }}
+      state: directory
+      mode:  '0555'
+    with_filetree: /home/master27/Загрузки/flask-master
+    when: item.state == 'directory'
+ 
+  - name: Copy files
+    copy:
+      src: '{{ item.src }}'
+      dest: /home/slave27/Загрузки/{{ item.path }}
+      mode: '0555'
+    with_filetree: /home/master27/Загрузки/flask-master
+    when: item.state == 'file' 
+    
+  - name: Install pip
+    apt: name=pip state=latest
+  
+  - name: Intstall Flask
+    pip: name=flask state=latest
+
+  - name: Install Python-dotenv
+    pip: name=python-dotenv state=latest
+  
+  - name: Run
+    shell: |
+       cd Загрузки
+       export FLASK_APP=start.py
+       export FLASK_ENV=development
+       flask run
